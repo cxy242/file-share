@@ -67,13 +67,22 @@ cleanup();
 fastify.register(require("@fastify/multipart"), {
   limits: { fileSize: 50 * 1024 * 1024 },
 });
-fastify.register(require("@fastify/static"), {
-  root: DATA_DIR,
-  prefix: "/dl/",
-  decorateReply: false,
-  setHeaders(res) {
-    res.setHeader("Content-Disposition", "attachment");
-  },
+// ── API: Download ────────────────────────────────────────────────────────────
+fastify.get("/dl/:code", async (req, reply) => {
+  const code = req.params.code;
+  const meta = files.get(code);
+  if (!meta) return reply.code(404).send({ error: "文件不存在或已过期" });
+
+  const filePath = path.join(DATA_DIR, meta.diskName);
+  if (!fs.existsSync(filePath)) {
+    files.delete(code);
+    return reply.code(404).send({ error: "文件不存在或已过期" });
+  }
+
+  reply.header("Content-Type", meta.mimeType || "application/octet-stream");
+  reply.header("Content-Disposition", `attachment; filename="${encodeURIComponent(meta.name)}"`);
+  reply.header("Content-Length", meta.size);
+  return reply.send(fs.createReadStream(filePath));
 });
 
 // ── API: Upload ──────────────────────────────────────────────────────────────
