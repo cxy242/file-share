@@ -4,7 +4,8 @@
   "description": "文件快传 - File Sharing App",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node scripts/setup.js"
   },
   "dependencies": {
     "express": "^4.21.0",
